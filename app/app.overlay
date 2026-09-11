@@ -1,0 +1,7 @@
+/ {
+    aliases{
+        // from nucleo_f446re.dts:
+        // led0 = &green_led_2;
+        app-led = &green_led_2;  
+    };
+};

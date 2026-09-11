@@ -61,4 +61,15 @@ endif # ADVANCED_LED_SETTINGS
 
 endif # LED_SUBSYSTEM
 
+menu "Heartbeat LED Configuration"
+
+config APP_HEARTBEAT_PERIOD_MS
+	int "Heartbeat LED blink period (ms)"
+	default 500
+	range 100 2000
+	help
+	  Period, in milliseconds, of the heartbeat LED on/off cycle.
+
+endmenu
+
 source "Kconfig.zephyr"
