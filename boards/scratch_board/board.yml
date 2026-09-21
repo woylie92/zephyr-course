@@ -1,0 +1,5 @@
+board:
+  name: scratch_board
+  vendor: st
+  socs:
+    - name: stm32f446xx
