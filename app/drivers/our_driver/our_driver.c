@@ -4,6 +4,7 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <our_driver/our_driver.h>
 
 LOG_MODULE_REGISTER(our_led_sensor, CONFIG_OUR_LED_SENSOR_LOG_LEVEL);
 
@@ -15,6 +16,7 @@ struct our_driver_config {
 /* Runtime mutable state */
 struct our_driver_data {
 	uint8_t led_state; /* 1 = ON, 0 = OFF */
+	uint32_t activation_count;  /* times the LED has been turned ON */
 };
 
 static int our_driver_sample_fetch(const struct device *dev, enum sensor_channel chan)
@@ -32,7 +34,8 @@ static int our_driver_sample_fetch(const struct device *dev, enum sensor_channel
 	}
 
 	data->led_state = 1;
-	LOG_DBG("sample_fetch: LED turned ON");
+	data->activation_count++;
+	LOG_DBG("sample_fetch: LED turned ON (activation #%u)", data->activation_count);
 
 	return 0;
 }
@@ -61,6 +64,24 @@ static int our_driver_channel_get(const struct device *dev, enum sensor_channel 
 
 	return 0;
 }
+
+int our_led_sensor_reset_count(const struct device *dev, uint32_t *count)   
+{                                                                           
+	struct our_driver_data *data;                                           
+
+	if (dev == NULL || count == NULL) {                                     
+		return -EINVAL;                                                     
+	}                                                                       
+
+	data = dev->data;                                                       
+
+	*count = data->activation_count;                                        
+	data->activation_count = 0;                                             
+
+	LOG_DBG("Activation count read (%u) and reset", *count);                
+
+	return 0;                                                               
+}                                                                           
 
 static DEVICE_API(sensor, our_driver_api) = {
 	.sample_fetch = our_driver_sample_fetch,
