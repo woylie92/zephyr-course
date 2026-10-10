@@ -73,3 +73,4 @@ config APP_HEARTBEAT_PERIOD_MS
 endmenu
 
 source "Kconfig.zephyr"
+rsource "drivers/our_driver/Kconfig"

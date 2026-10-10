@@ -5,3 +5,11 @@
         app-led = &green_led_2;  
     };
 };
+
+/ {
+	our_led_sensor0: our_led_sensor0 {
+		compatible = "our,led-sensor";
+		led-gpios = <&gpioa 5 GPIO_ACTIVE_HIGH>;
+		status = "okay";
+	};
+};

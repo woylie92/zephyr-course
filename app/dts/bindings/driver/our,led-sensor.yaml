@@ -1,0 +1,12 @@
+description: |
+  On-board LED exposed through Zephyr's Sensor API...
+
+compatible: "our,led-sensor"
+
+include: base.yaml
+
+properties:
+  led-gpios:
+    type: phandle-array
+    required: true
+    description: GPIO connected to the on-board LED

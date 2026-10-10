@@ -1,0 +1,17 @@
+menuconfig OUR_LED_SENSOR
+	bool "Our custom LED sensor driver"
+	default y
+	depends on DT_HAS_OUR_LED_SENSOR_ENABLED
+	select GPIO
+	select SENSOR
+	help
+	  Enable the custom driver that exposes an on-board LED through
+	  the standard Zephyr Sensor API.
+
+if OUR_LED_SENSOR
+
+module = OUR_LED_SENSOR
+module-str = our LED sensor driver
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # OUR_LED_SENSOR
