@@ -34,6 +34,7 @@ extern "C" {
  * @retval -EINVAL if dev or count is NULL.
  */
 int our_led_sensor_reset_count(const struct device *dev, uint32_t *count);
+int our_led_sensor_set_count(const struct device *dev, uint32_t value);
 
 #ifdef __cplusplus
 }

@@ -3,85 +3,127 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/shell/shell.h>
+#include <our_driver/our_driver.h>
+
+#define SENSOR_SET_MIN 0
+#define SENSOR_SET_MAX 1000
 
 static const struct device *get_dev(const struct shell *sh)
 {
-	const struct device *dev = DEVICE_DT_GET_ANY(our_led_sensor);
+    const struct device *dev = DEVICE_DT_GET_ANY(our_led_sensor);
 
-	if (dev == NULL) {
-		shell_error(sh, "No our_led_sensor device found");
-		return NULL;
-	}
-	if (!device_is_ready(dev)) {
-		shell_error(sh, "Device %s is not ready", dev->name);
-		return NULL;
-	}
-	return dev;
+    if (dev == NULL) {
+        shell_error(sh, "No our_led_sensor device found");
+        return NULL;
+    }
+    if (!device_is_ready(dev)) {
+        shell_error(sh, "Device %s is not ready", dev->name);
+        return NULL;
+    }
+    return dev;
 }
 
 static int cmd_sensor_fetch(const struct shell *sh, size_t argc, char **argv)
 {
-	ARG_UNUSED(argc);
-	ARG_UNUSED(argv);
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
 
-	const struct device *dev = get_dev(sh);
+    const struct device *dev = get_dev(sh);
 
-	if (dev == NULL) {
-		return -ENODEV;
-	}
+    if (dev == NULL) {
+        return -ENODEV;
+    }
 
-	int ret = sensor_sample_fetch(dev);
+    int ret = sensor_sample_fetch(dev);
 
-	if (ret < 0) {
-		shell_error(sh, "sensor_sample_fetch failed: %d", ret);
-		return ret;
-	}
-	shell_print(sh, "Sample fetched");
-	return 0;
+    if (ret < 0) {
+        shell_error(sh, "sensor_sample_fetch failed: %d", ret);
+        return ret;
+    }
+    shell_print(sh, "Sample fetched");
+    return 0;
 }
 
 static int cmd_sensor_read(const struct shell *sh, size_t argc, char **argv)
 {
-	ARG_UNUSED(argc);
-	ARG_UNUSED(argv);
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
 
-	const struct device *dev = get_dev(sh);
+    const struct device *dev = get_dev(sh);
 
-	if (dev == NULL) {
-		return -ENODEV;
-	}
+    if (dev == NULL) {
+        return -ENODEV;
+    }
 
-	struct sensor_value val;
-	int ret = sensor_channel_get(dev, SENSOR_CHAN_ALL, &val);
+    struct sensor_value val;
+    int ret = sensor_channel_get(dev, SENSOR_CHAN_ALL, &val);
 
-	if (ret < 0) {
-		shell_error(sh, "sensor_channel_get failed: %d", ret);
-		return ret;
-	}
-	shell_print(sh, "val1=%d val2=%d", val.val1, val.val2);
-	return 0;
+    if (ret < 0) {
+        shell_error(sh, "sensor_channel_get failed: %d", ret);
+        return ret;
+    }
+    shell_print(sh, "val1=%d val2=%d", val.val1, val.val2);
+    return 0;
 }
 
 static int cmd_sensor_info(const struct shell *sh, size_t argc, char **argv)
 {
-	ARG_UNUSED(argc);
-	ARG_UNUSED(argv);
+    ARG_UNUSED(argc);
+    ARG_UNUSED(argv);
 
-	const struct device *dev = DEVICE_DT_GET_ANY(our_led_sensor);
+    const struct device *dev = DEVICE_DT_GET_ANY(our_led_sensor);
 
-	if (dev == NULL) {
-		shell_error(sh, "No our_led_sensor device found");
-		return -ENODEV;
-	}
-	shell_print(sh, "Device: %s", dev->name);
-	shell_print(sh, "Ready:  %s", device_is_ready(dev) ? "yes" : "no");
-	return 0;
+    if (dev == NULL) {
+        shell_error(sh, "No our_led_sensor device found");
+        return -ENODEV;
+    }
+    shell_print(sh, "Device: %s", dev->name);
+    shell_print(sh, "Ready:  %s", device_is_ready(dev) ? "yes" : "no");
+    return 0;
+}
+
+static int cmd_sensor_set(const struct shell *sh, size_t argc, char **argv)
+{
+    if (argc != 2) {
+        shell_error(sh, "Usage: sensor set <value> (%d-%d)",
+                    SENSOR_SET_MIN, SENSOR_SET_MAX);
+        return -EINVAL;
+    }
+
+    int err = 0;
+    long value = shell_strtol(argv[1], 10, &err);
+
+    if (err != 0) {
+        shell_error(sh, "'%s' is not a valid number", argv[1]);
+        return -EINVAL;
+    }
+    if (value < SENSOR_SET_MIN || value > SENSOR_SET_MAX) {
+        shell_error(sh, "Value %ld out of range (%d-%d)", value,
+                    SENSOR_SET_MIN, SENSOR_SET_MAX);
+        return -EINVAL;
+    }
+
+    const struct device *dev = get_dev(sh);
+
+    if (dev == NULL) {
+        return -ENODEV;
+    }
+
+    int ret = our_led_sensor_set_count(dev, (uint32_t)value);
+
+    if (ret < 0) {
+        shell_error(sh, "our_led_sensor_set_count failed: %d", ret);
+        return ret;
+    }
+    shell_print(sh, "Activation count set to %ld", value);
+    return 0;
 }
 
 SHELL_STATIC_SUBCMD_SET_CREATE(sub_sensor,
-	SHELL_CMD(fetch, NULL, "Fetch a sample (LED on)", cmd_sensor_fetch),
-	SHELL_CMD(read, NULL, "Read channel value (LED off)", cmd_sensor_read),
-	SHELL_CMD(info, NULL, "Show device name and ready state", cmd_sensor_info),
-	SHELL_SUBCMD_SET_END);
+    SHELL_CMD(fetch, NULL, "Fetch a sample (LED on)", cmd_sensor_fetch),
+    SHELL_CMD(read, NULL, "Read channel value (LED off)", cmd_sensor_read),
+    SHELL_CMD(info, NULL, "Show device name and ready state", cmd_sensor_info),
+    SHELL_CMD_ARG(set, NULL, "Set activation count <0-1000>", cmd_sensor_set, 2, 0),
+    SHELL_SUBCMD_SET_END);
 
 SHELL_CMD_REGISTER(sensor, &sub_sensor, "LED sensor commands", NULL);

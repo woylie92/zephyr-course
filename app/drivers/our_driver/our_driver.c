@@ -81,7 +81,19 @@ int our_led_sensor_reset_count(const struct device *dev, uint32_t *count)
 	LOG_DBG("Activation count read (%u) and reset", *count);                
 
 	return 0;                                                               
-}                                                                           
+}                 
+
+int our_led_sensor_set_count(const struct device *dev, uint32_t value)
+{
+	if (dev == NULL) {
+		return -EINVAL;
+	}
+
+	struct our_driver_data *data = dev->data;
+
+	data->activation_count = value;
+	return 0;
+}
 
 static DEVICE_API(sensor, our_driver_api) = {
 	.sample_fetch = our_driver_sample_fetch,
