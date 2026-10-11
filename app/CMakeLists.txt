@@ -4,6 +4,10 @@ project(app)
 
 target_sources(app PRIVATE src/main.cpp)
 
+if(CONFIG_SHELL)
+  target_sources(app PRIVATE src/sensor_shell.c)
+endif()
+
 if(CONFIG_OUR_LED_SENSOR)
   target_sources(app PRIVATE drivers/our_driver/our_driver.c)
 endif()
